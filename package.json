@@ -1,0 +1,38 @@
+{
+  "name": "jsdatalogparser",
+  "version": "0.0.1",
+  "description": "'datalog' + AST tree.",
+  "keywords": [
+  ],
+  "author": {
+    "name": "eugene wu"
+  },
+  "contributors": [
+    {
+      "name": "Eugene Wu",
+      "url": "http://www.eugenewu.net"
+    }
+  ],
+  "maintainers": [
+  ],
+  "homepage": "",
+  "main": "libs/jsdatalogparser.js",
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/cudbg/jsdatalogparser.git"
+  },
+  "devDependencies": {
+    "underscore": "1.8.3",
+    "vows": "0.7.0",
+    "uglify-js": "2.4.0",
+    "glob": "5.0.14",
+    "pegjs": "0.9.0"
+  },
+  "dependencies": {
+    "underscore": "1.8.3"
+  },
+ 
+  "scripts": {
+    "test": "./node_modules/.bin/vows"
+  }
+}
