@@ -1,6 +1,14 @@
 # Setup and Running
 
-This folder contains code related to the core interaction language parser, AST, and execution engine.
+Parse really simple datalog programs
+
+        A(x, y) :- B(c, d)
+        A(x, y) :- B(c, d), A(e, f)
+        A(x, y) :- B(c, d), c > 1
+        A(x, y) :- B(c, d), c * d > 1
+        A(x, y) :- B(c, d), c + 1 > 1, d < 1
+        A(x, sum(y)) :- B(c, d)
+
 
 Files
 
@@ -15,7 +23,6 @@ Getting started
         npm install .
         cp node_modules/pegjs/bin/pegjs .
         pip install fabric
-
 
 * `fab` commands
 
