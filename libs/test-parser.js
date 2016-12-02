@@ -20,7 +20,7 @@
         return parser.one("head(a, b) :- tail(b, c)");
       },
       "parses": function(q) {
-        return assert.equal(q.toSQL(), "head(a, b) :- tail(b, c)");
+        return assert.equal(q.toSQL(), "head(a, b) :- tail(b, c);");
       }
     },
     "Join": {
@@ -28,7 +28,7 @@
         return parser.one("head(a, b) :- A(b, c), B(d, c), C(b, a)");
       },
       "parses": function(q) {
-        return assert.equal(q.toSQL(), "head(a, b) :- A(b, c), B(d, c), C(b, a)");
+        return assert.equal(q.toSQL(), "head(a, b) :- A(b, c), B(d, c), C(b, a);");
       }
     },
     "Filters": {
@@ -36,7 +36,7 @@
         return parser.one("head(a, b) :- A(b, c), B(d, c), C(b, a), b > 0, c < 100, (a+b) = 2");
       },
       "parses": function(q) {
-        return assert.equal(q.toSQL(), "head(a, b) :- A(b, c), B(d, c), C(b, a), (b > 0.00), (c < 100.00), ((a + b) = 2.00)");
+        return assert.equal(q.toSQL(), "head(a, b) :- A(b, c), B(d, c), C(b, a), (b > 0.00), (c < 100.00), ((a + b) = 2.00);");
       }
     },
     "Aggregates": {
@@ -44,12 +44,21 @@
         return parser.one("head(a, sum(c)) :- T(a, c), c > 10");
       },
       "parses": function(q) {
-        return assert.equal(q.toSQL(), "head(a, sum(c)) :- T(a, c), (c > 10.00)");
+        return assert.equal(q.toSQL(), "head(a, sum(c)) :- T(a, c), (c > 10.00);");
+      }
+    },
+    "Tuples": {
+      topic: function() {
+        return parser("T(1,2,3,4); G('a', 'b')");
+      },
+      parses: function(q) {
+        assert.equal(q.toSQL(), "T(1, 2, 3, 4);\nG('a', 'b');");
+        return console.log(q.toSQL());
       }
     },
     "Program": {
       topic: function() {
-        return "T(x, y) :- readingssmall(x) scales(minx, maxx, miny, maxy) :- GB(readingssmall(), min(x),";
+        return "T(x, y) :- readingssmall(x); scales(minx, maxx, miny, maxy) :- GB(readingssmall(), min(x))";
       }
     }
   });

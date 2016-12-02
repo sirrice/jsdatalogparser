@@ -7,17 +7,20 @@ head(attr [, attr]*) :- pred(attr,...), GB(pred(attr,...), agg(),...) expr, expr
 start = stmt_list
 
 stmt_list = 
-  ( c: (whitespace general_stmt? whitespace (semicolon whitespace general_stmt? whitespace)* semicolon?))
+  ( c: (whitespace general_stmt? 
+        (whitespace semicolon whitespace general_stmt? )* whitespace semicolon? whitespace))
   { 
     var qs = _.chain(c)
               .flatten()
               .without(";", " ", "\t")
+              .compact()
               .value();
     return new ast.Queries(qs);
   }
 
 general_stmt = 
-  ( g: ( datalog_stmt / 
+  ( g: ( tuple_stmt / 
+         datalog_stmt / 
          /*func_stmt /*/
          param_expr / expr_and))
   { return g; }
@@ -32,6 +35,22 @@ func_stmt =
     return new ast.FunctionQuery(cf[0], cf[4]); 
   }
 */
+
+tuple_stmt = 
+  s: (name '(' val_list ')')
+  {
+    return new ast.Tuple(s[0], s[2]);
+  }
+
+val_list = 
+  l: (literal_value (whitespace comma whitespace literal_value)*)
+  {
+    return _.chain(l)
+            .flatten()
+            .without(" ", ",")
+            .compact()
+            .value();
+  }
 
 datalog_stmt = 
   s: (head_predicate whitespace ':-' whitespace tail)
@@ -91,41 +110,6 @@ tail =
             .flatten()
             .without(",", " ", "\n", "\t")
             .value();
-  }
-
-
-
-letudf_stmt = 
-  (
-    'LET' whitespace1
-    input:  ('TABLEUDF' / 'ROWUDF')?
-    whitespace1
-    name: name
-    render_or_compute: ('RENDER' / 'COMPUTE')?    
-    whitespace1 'RETURN' whitespace lparen
-    args: letudf_arg_list?
-    rparen
-    whitespace1 'SOURCE' whitespace
-    source: js_string_literal
-   )
-  {
-    input = _.isNull(input) ? "TABLEUDF" : input;
-    render_or_compute = _.isNull(render_or_compute) ? "RENDER" : render_or_compute;
-    return new ast.LetUDF(name, args, input, render_or_compute, source.value);
-  }
-
-letudf_arg_list = 
-  args: (letudf_arg (whitespace comma letudf_arg)*)
-  {
-    args = _.without(_.flatten(args), ',', ' ', '\t', '\n');
-    return args;
-  }
-
-letudf_arg = 
-  arg: (whitespace name whitespace1 type)
-  { 
-    arg = _.without(_.flatten(arg), ' ', '\t', '\n');
-    return new ast.LetUDFArg(arg[0], arg[1]);
   }
 
 

@@ -107,9 +107,20 @@ class Statement extends Node
   toSQL: ->
     head = @head.toSQL()
     tail = _.map @tail, (t) -> t.toSQL()
-    "#{head} :- #{tail.join ", "}"
+    "#{head} :- #{tail.join ", "};"
 
 class Atom extends Node
+
+class Tuple extends Atom
+  constructor: (@tableName, @vals) ->
+  toSQL: ->
+    vals = _.map @vals, (v) -> 
+      if _.isString v
+        "'#{v}'"
+      else
+        v + ""
+    "#{@tableName}(#{vals.join ", "});"
+    
 
 class Predicate extends Atom
   constructor: (@tableName, @args) ->
@@ -546,75 +557,13 @@ class Limit extends Expr
       @expr.toSQL()
 
 
-##############################################
-#
-# Function Query
-#
-##############################################
-
-class FunctionQuery extends Node
-  constructor: (@fname, @tableOrQuery) ->
-    super
-    unless @tableOrQuery?
-      throw new Error "FunctionQuery cannot have empty argument"
-
-  clone: ->
-    new FunctionQuery @fname, @tableOrQuery.clone()
-
-  children: -> [@tableOrQuery]
-
-  toSQL: ->
-    "#{@fname}(#{@tableOrQuery.toSQL()})"
-
-
-
-#
-# compute query's schema by recursively expanding all * clauses
-# XXX: passes over queries to expand STAR project clauses
-#
-# @param queryName name of query to compute schema for
-# @param nameToQueries dictionary mapping query names (e.g., in FROM clauses) to the Query AST objects
-#
-schema = (() ->
-  get_schema = (queryName, nameToQueries, seen={}) ->
-    return [] if queryName of seen
-    seen[queryName] = yes
-
-    query = nameToQueries[queryName]
-    schema = query.schema()
-    stars = _.filter schema, (s) -> s.type == "star"
-    rest = _.reject schema, (s) -> s.type == "star"
-    return rest unless stars.length
-
-    # expand the schemas for SELECT * clauses
-    starSchemas = for star in stars
-      if star.table?
-        get_schema star.table.name, nameToQueries, seen
-      else
-        sources = query.sources()
-        unless sources.length == 1
-          throw new Error("* project clause must be qualified with table name if >1 table source")
-        get_schema sources[0].name, nameToQueries, seen
-
-    tmp = null
-    for starSchema in starSchemas
-      tmp = starSchema unless tmp?
-      isConsistent = _.chain(tmp)
-        .zip(starSchema)
-        .all((p) -> p[0].type == p[1].type)
-        .value()
-      unless isConsistent
-        throw new Error "Inconsistent schemas: #{JSON.stringify tmp}
-          ::: #{JSON.stringify starSchema}"
-
-    rest.concat tmp
-)()
-
 
 
 module.exports =
   Queries           : Queries
   Statement         : Statement
+  Atom              : Atom
+  Tuple             : Tuple
   Predicate         : Predicate
   AggPredicate      : AggPredicate
   Table             : Table
@@ -635,5 +584,3 @@ module.exports =
   OrderBy           : OrderBy
   OrderByClause     : OrderByClause
   Limit             : Limit
-  FunctionQuery     : FunctionQuery
-  schema            : schema
